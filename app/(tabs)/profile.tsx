@@ -316,8 +316,8 @@ export default function ProfileScreen() {
         <Text style={[styles.groupLabel, { color: colors.mutedForeground }]}>Support</Text>
         <View style={[styles.menuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <MenuItem Icon={HelpCircle} label="Help & Support" colors={colors} onPress={() => {
-            const url = "mailto:support@payos.africa?subject=Roam%20Support";
-            Linking.openURL(url).catch(() => Alert.alert("Contact Support", "Email us at support@payos.africa"));
+            const url = "mailto:support@payosng.com?subject=Roam%20App%20Support";
+            Linking.openURL(url).catch(() => Alert.alert("Contact Support", "Email us at support@payosng.com"));
           }} />
           <MenuItem Icon={Info} label="About Roam" colors={colors} onPress={() => Alert.alert("Roam by PayOs", "Version 1.0.0\n\nBuilt for seamless cross-border payments across Africa.\n\n© 2025 PayOs Africa Limited")} last />
         </View>
