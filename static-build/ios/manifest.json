@@ -1,0 +1,96 @@
+{
+  "id": "9280af07-39a8-497b-a0e2-32013eb6c6f5",
+  "createdAt": "2026-04-18T09:21:20.053Z",
+  "runtimeVersion": "exposdk:54.0.0",
+  "launchAsset": {
+    "key": "bundle-1776504080053-1080",
+    "contentType": "application/javascript",
+    "url": "https://5e311db7-cc2a-4e90-a650-56759e299d8b-00-273fsz1926cvc.worf.replit.dev/1776504080053-1080/_expo/static/js/ios/bundle.js"
+  },
+  "assets": [],
+  "metadata": {},
+  "extra": {
+    "eas": {},
+    "expoClient": {
+      "name": "Roam by PayOs",
+      "slug": "roam-app",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "roam-app",
+      "userInterfaceStyle": "dark",
+      "newArchEnabled": true,
+      "splash": {
+        "image": "./assets/images/icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#0B1C3D",
+        "imageUrl": "http://127.0.0.1:8099/assets/./assets/images/icon.png"
+      },
+      "ios": {
+        "supportsTablet": false
+      },
+      "android": {
+        "backgroundColor": "#0B1C3D"
+      },
+      "web": {
+        "favicon": "./assets/images/icon.png"
+      },
+      "plugins": [
+        [
+          "expo-router",
+          {
+            "origin": "https://replit.com/"
+          }
+        ],
+        "expo-font",
+        "expo-web-browser"
+      ],
+      "experiments": {
+        "typedRoutes": true,
+        "reactCompiler": true
+      },
+      "_internal": {
+        "isDebug": false,
+        "projectRoot": "/home/runner/workspace/artifacts/roam-app",
+        "dynamicConfigPath": {},
+        "staticConfigPath": "/home/runner/workspace/artifacts/roam-app/app.json",
+        "packageJsonPath": "/home/runner/workspace/artifacts/roam-app/package.json",
+        "pluginHistory": {
+          "expo-font": {
+            "name": "expo-font",
+            "version": "14.0.11"
+          },
+          "expo-web-browser": {
+            "name": "expo-web-browser",
+            "version": "15.0.10"
+          }
+        }
+      },
+      "sdkVersion": "54.0.0",
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ],
+      "extra": {
+        "router": {
+          "origin": "https://replit.com/"
+        }
+      },
+      "iconUrl": "http://127.0.0.1:8099/assets/./assets/images/icon.png",
+      "hostUri": "5e311db7-cc2a-4e90-a650-56759e299d8b-00-273fsz1926cvc.worf.replit.dev/ios"
+    },
+    "expoGo": {
+      "debuggerHost": "5e311db7-cc2a-4e90-a650-56759e299d8b-00-273fsz1926cvc.worf.replit.dev/ios",
+      "developer": {
+        "tool": "expo-cli",
+        "projectRoot": "/home/runner/workspace/artifacts/roam-app"
+      },
+      "packagerOpts": {
+        "dev": false
+      },
+      "mainModuleName": "node_modules/.pnpm/expo-router@6.0.23_@types+react-dom@19.1.11_@types+react@19.1.17__@types+react@19.1.17__abd38177f532ddff11e5834956475527/node_modules/expo-router/entry"
+    },
+    "scopeKey": "@anonymous/roam-app-8153d412-36ae-4ec8-88f2-362c541a7b59"
+  }
+}
