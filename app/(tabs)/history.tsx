@@ -4,6 +4,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -29,9 +30,16 @@ const FILTERS: { label: string; value: Filter }[] = [
 export default function HistoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { transactions } = useRoam();
+  const { transactions, syncBalance } = useRoam();
   const [filter, setFilter] = useState<Filter>("all");
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await syncBalance();
+    setRefreshing(false);
+  }
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const botPad = 90 + (Platform.OS === "web" ? 34 : 0);
@@ -46,8 +54,16 @@ export default function HistoryScreen() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        scrollEnabled={filtered.length > 0}
-        contentContainerStyle={{ paddingBottom: botPad }}
+        scrollEnabled={true}
+        contentContainerStyle={{ paddingBottom: botPad, flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         ListHeaderComponent={
           <View>
             <View style={[styles.header, { paddingTop: topPad }]}>
