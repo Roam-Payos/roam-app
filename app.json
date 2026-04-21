@@ -26,6 +26,12 @@
       "package": "africa.payos.roam",
       "versionCode": 1,
       "backgroundColor": "#0B1C3D",
+      "statusBar": {
+        "barStyle": "light-content",
+        "translucent": true,
+        "backgroundColor": "transparent"
+      },
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0B1C3D"
@@ -50,10 +56,7 @@
               "pathPrefix": "/"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -79,6 +82,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cff9ff58-baac-4e3e-9c78-3453cf701a90"
+      }
     }
   }
 }
