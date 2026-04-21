@@ -74,11 +74,9 @@ export default function HomeScreen() {
   const country   = user?.country?.code    ?? "NG";
 
   const allTx = useMemo(() => {
-    const today  = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
-    const merged = [...transactions, ...usdTransactions]
-      .filter(tx => tx.date.slice(0, 10) === today);
+    const merged = [...transactions, ...usdTransactions];
     merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return merged;
+    return merged.slice(0, 20);
   }, [transactions, usdTransactions]);
 
   const usdInput    = parseFloat(convertAmt.replace(/,/g, "")) || 0;
@@ -330,7 +328,7 @@ export default function HomeScreen() {
 
             {/* ── Transactions header ── */}
             <View style={[styles.txHeader, { paddingRight: 16, marginBottom: 4 }]}>
-              <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 0 }]}>Today</Text>
+              <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 0 }]}>Recent Activity</Text>
               <Pressable onPress={() => router.push("/(tabs)/history")}>
                 <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
               </Pressable>
@@ -341,8 +339,8 @@ export default function HomeScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Inbox size={36} color={colors.mutedForeground} strokeWidth={1.5} />
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No activity today</Text>
-            <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Transactions you make today will appear here</Text>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No transactions yet</Text>
+            <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>Fund your wallet or make a payment to get started</Text>
           </View>
         }
       />
