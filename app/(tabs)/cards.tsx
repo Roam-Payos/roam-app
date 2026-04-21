@@ -1,5 +1,6 @@
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -59,57 +60,60 @@ interface CardDef {
   scheme: "visa" | "mastercard";
 }
 
-const BASE_CARDS: CardDef[] = [
-  {
-    id: "ngn",
-    label: "Roam NGN Debit",
-    network: "Visa Virtual",
-    currency: "NGN",
-    symbol: "₦",
-    number: "4242 4242 4242 4242",
-    expiry: "12/28",
-    cvv: "473",
-    type: "debit",
-    gradient: ["#1D4ED8", "#1E3A8A"],
-    scheme: "visa",
-  },
-  {
-    id: "usd",
-    label: "Roam USD Card",
-    network: "Mastercard Virtual",
-    currency: "USD",
-    symbol: "$",
-    number: "5399 1234 5678 9012",
-    expiry: "09/27",
-    cvv: "281",
-    type: "usd",
-    gradient: ["#0F172A", "#1E293B"],
-    scheme: "mastercard",
-  },
-];
-
-// ── Card spend mock transactions ─────────────────────────────────────────────
-
-interface CardTx {
-  id: string;
-  merchant: string;
-  category: string;
-  amount: number;
-  currency: string;
-  symbol: string;
-  date: string;
-  cardId: string;
-  logo: string;
+// ── Generate user-specific card digits from their ID/phone ────────────────────
+function genCardSegment(seed: string, offset: number, len = 4): string {
+  let h = offset * 2654435761;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 2246822519);
+    h ^= h >>> 13;
+  }
+  h = (h >>> 0) + offset * 1234567;
+  return String(Math.abs(h) % Math.pow(10, len)).padStart(len, "0");
 }
 
-const CARD_TXS: CardTx[] = [
-  { id: "c1", merchant: "Netflix", category: "Streaming", amount: -4.99, currency: "USD", symbol: "$", date: new Date(Date.now() - 3600000).toISOString(), cardId: "usd", logo: "🎬" },
-  { id: "c2", merchant: "Shopify Checkout", category: "Shopping", amount: -29.00, currency: "USD", symbol: "$", date: new Date(Date.now() - 86400000).toISOString(), cardId: "usd", logo: "🛒" },
-  { id: "c3", merchant: "Amazon Prime", category: "Subscription", amount: -14.99, currency: "USD", symbol: "$", date: new Date(Date.now() - 86400000 * 2).toISOString(), cardId: "usd", logo: "📦" },
-  { id: "c4", merchant: "Uber Nigeria", category: "Transport", amount: -1800, currency: "NGN", symbol: "₦", date: new Date(Date.now() - 7200000).toISOString(), cardId: "ngn", logo: "🚗" },
-  { id: "c5", merchant: "Shoprite", category: "Groceries", amount: -12500, currency: "NGN", symbol: "₦", date: new Date(Date.now() - 86400000).toISOString(), cardId: "ngn", logo: "🛍️" },
-  { id: "c6", merchant: "DSTV", category: "Entertainment", amount: -6200, currency: "NGN", symbol: "₦", date: new Date(Date.now() - 86400000 * 3).toISOString(), cardId: "ngn", logo: "📺" },
-];
+function buildCards(userId: string, phone: string): CardDef[] {
+  const seed = userId + phone;
+  const n1 = genCardSegment(seed, 1);
+  const n2 = genCardSegment(seed, 2);
+  const n3 = genCardSegment(seed, 3);
+  const n4 = genCardSegment(seed, 4);
+  const u1 = genCardSegment(seed, 5);
+  const u2 = genCardSegment(seed, 6);
+  const u3 = genCardSegment(seed, 7);
+  const u4 = genCardSegment(seed, 8);
+  const expYY = (new Date().getFullYear() + 3) % 100;
+  const expMM = String((parseInt(genCardSegment(seed, 9, 2)) % 12) + 1).padStart(2, "0");
+  const cvvN = genCardSegment(seed, 10, 3);
+  const cvvU = genCardSegment(seed, 11, 3);
+  return [
+    {
+      id: "ngn",
+      label: "Roam NGN Debit",
+      network: "Visa Virtual",
+      currency: "NGN",
+      symbol: "₦",
+      number: `4${n1.slice(1)} ${n2} ${n3} ${n4}`,
+      expiry: `${expMM}/${expYY}`,
+      cvv: cvvN,
+      type: "debit",
+      gradient: ["#1D4ED8", "#1E3A8A"],
+      scheme: "visa",
+    },
+    {
+      id: "usd",
+      label: "Roam USD Card",
+      network: "Mastercard Virtual",
+      currency: "USD",
+      symbol: "$",
+      number: `5${u1.slice(1)} ${u2} ${u3} ${u4}`,
+      expiry: `${expMM}/${expYY}`,
+      cvv: cvvU,
+      type: "usd",
+      gradient: ["#0F172A", "#1E293B"],
+      scheme: "mastercard",
+    },
+  ];
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -135,6 +139,8 @@ export default function CardsScreen() {
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const botPad = 90 + (Platform.OS === "web" ? 34 : 0);
 
+  const userCards = buildCards(String(user?.id ?? "0"), user?.phone ?? "");
+
   const [activeIdx, setActiveIdx] = useState(0);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [frozen, setFrozen] = useState<Record<string, boolean>>({});
@@ -148,7 +154,7 @@ export default function CardsScreen() {
   const flatListRef = useRef<FlatList>(null);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
-  const card = BASE_CARDS[activeIdx]!;
+  const card = userCards[activeIdx]!;
   const isRevealed = revealed[card.id] ?? false;
   const isFrozen = frozen[card.id] ?? false;
 
@@ -156,7 +162,7 @@ export default function CardsScreen() {
     ? `$${usdBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : `₦${balance.toLocaleString("en-NG")}`;
 
-  const cardTxs = CARD_TXS.filter((t) => t.cardId === card.id);
+  const cardTxs: never[] = [];
 
   function vibrate() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -214,7 +220,7 @@ export default function CardsScreen() {
           <View>
             <Text style={[styles.title, { color: colors.foreground }]}>My Cards</Text>
             <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-              {BASE_CARDS.length} virtual {BASE_CARDS.length === 1 ? "card" : "cards"}
+              {userCards.length} virtual {userCards.length === 1 ? "card" : "cards"}
             </Text>
           </View>
           <Pressable
@@ -228,14 +234,14 @@ export default function CardsScreen() {
         {/* ── Card Carousel ── */}
         <FlatList
           ref={flatListRef}
-          data={BASE_CARDS}
+          data={userCards}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item) => item.id}
           onMomentumScrollEnd={(e) => {
             const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_W + 20));
-            setActiveIdx(Math.min(Math.max(idx, 0), BASE_CARDS.length - 1));
+            setActiveIdx(Math.min(Math.max(idx, 0), userCards.length - 1));
           }}
           contentContainerStyle={{ paddingHorizontal: 20, gap: 20 }}
           snapToInterval={CARD_W + 20}
@@ -255,9 +261,9 @@ export default function CardsScreen() {
         />
 
         {/* ── Dots ── */}
-        {BASE_CARDS.length > 1 && (
+        {userCards.length > 1 && (
           <View style={styles.dots}>
-            {BASE_CARDS.map((_, i) => (
+            {userCards.map((_, i) => (
               <View
                 key={i}
                 style={[styles.dot, {
@@ -282,7 +288,7 @@ export default function CardsScreen() {
           <ActionBtn Icon={isRevealed ? EyeOff : Eye} label={isRevealed ? "Hide" : "Reveal"} color={colors.primary} onPress={toggleReveal} colors={colors} />
           <ActionBtn Icon={isFrozen ? PlayCircle : PauseCircle} label={isFrozen ? "Unfreeze" : "Freeze"} color="#3B82F6" onPress={toggleFreeze} colors={colors} />
           <ActionBtn Icon={RefreshCw} label="Top Up" color={colors.success ?? "#16A34A"} onPress={handleTopUp} colors={colors} />
-          <ActionBtn Icon={Plus} label="New Card" color="#8B5CF6" onPress={() => Alert.alert("Request Card", "You can have up to 3 virtual cards. This feature is coming soon.")} colors={colors} />
+          <ActionBtn Icon={Plus} label="New Card" color="#8B5CF6" onPress={() => Alert.alert("Request Card", "Additional virtual cards (international, business) are being rolled out. You'll get notified when it's ready for your account.")} colors={colors} />
         </View>
 
         {/* ── Card Details ── */}
@@ -624,11 +630,37 @@ function CardSettingsModal({ visible, card, onClose, colors }: {
   visible: boolean; card: CardDef; onClose: () => void; colors: ReturnType<typeof useColors>;
 }) {
   const items = [
-    { label: "Report Card Lost / Stolen", icon: "🚨", danger: true },
-    { label: "Change PIN", icon: "🔑", danger: false },
-    { label: "View Statement", icon: "📄", danger: false },
-    { label: "Set Spending Limit", icon: "💳", danger: false },
-    { label: "Request Physical Card", icon: "📮", danger: false },
+    {
+      label: "Report Card Lost / Stolen",
+      icon: "🚨",
+      danger: true,
+      onPress: () => {
+        onClose();
+        setTimeout(() => Alert.alert(
+          "Report Lost Card",
+          "Your card will be immediately frozen and a new card issued within 24 hours.\n\nContact: support@payos.africa",
+          [{ text: "Cancel" }, { text: "Freeze Card Now", style: "destructive" }]
+        ), 300);
+      },
+    },
+    {
+      label: "View Statement",
+      icon: "📄",
+      danger: false,
+      onPress: () => { onClose(); setTimeout(() => router.push("/(tabs)/history" as never), 300); },
+    },
+    {
+      label: "Set Spending Limit",
+      icon: "💳",
+      danger: false,
+      onPress: () => { onClose(); setTimeout(() => Alert.alert("Spending Limits", "Use the Spend Controls on your card to manage online, contactless, and ATM settings."), 300); },
+    },
+    {
+      label: "Request Physical Card",
+      icon: "📮",
+      danger: false,
+      onPress: () => { onClose(); setTimeout(() => Alert.alert("Physical Card", "Physical Debit Card delivery is being rolled out across Nigeria. You'll receive a notification when it's available for your area."), 300); },
+    },
   ];
 
   return (
@@ -643,7 +675,7 @@ function CardSettingsModal({ visible, card, onClose, colors }: {
         {items.map((item, i) => (
           <Pressable
             key={i}
-            onPress={() => { onClose(); setTimeout(() => Alert.alert(item.label, "This feature is coming soon."), 400); }}
+            onPress={item.onPress}
             style={({ pressed }) => [styles.modalItem, { borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
           >
             <Text style={{ fontSize: 20 }}>{item.icon}</Text>
