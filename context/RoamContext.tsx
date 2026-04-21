@@ -555,22 +555,22 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
       if ((isActiveSession || isLegacySession) && storedUser && storedPin) {
         setUser(JSON.parse(storedUser));
         setPin(storedPin);
-        setBalance(storedBalance ? Number(storedBalance) : 120000);
-        setTransactions(storedTx ? JSON.parse(storedTx) : DEMO_TRANSACTIONS);
-        setUsdBalance(storedUsdBalance ? Number(storedUsdBalance) : 500);
-        setUsdTransactions(storedUsdTx ? JSON.parse(storedUsdTx) : DEMO_USD_TRANSACTIONS);
+        setBalance(storedBalance ? Number(storedBalance) : 0);
+        setTransactions(storedTx ? JSON.parse(storedTx) : []);
+        setUsdBalance(storedUsdBalance ? Number(storedUsdBalance) : 0);
+        setUsdTransactions(storedUsdTx ? JSON.parse(storedUsdTx) : []);
       }
     } catch (_) {}
     setIsLoading(false);
   }
 
-  const register = useCallback(async (newUser: RoamUser, newPin: string, startingBalance = 120000) => {
+  const register = useCallback(async (newUser: RoamUser, newPin: string, startingBalance = 0) => {
     setUser(newUser);
     setPin(newPin);
     setBalance(startingBalance);
-    setTransactions(DEMO_TRANSACTIONS);
-    setUsdBalance(500);
-    setUsdTransactions(DEMO_USD_TRANSACTIONS);
+    setTransactions([]);
+    setUsdBalance(0);
+    setUsdTransactions([]);
     setHasExistingAccount(true);
     const did = await getOrCreateDeviceId();
     setDeviceId(did);
@@ -578,9 +578,9 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser)),
       AsyncStorage.setItem(STORAGE_KEYS.PIN, newPin),
       AsyncStorage.setItem(STORAGE_KEYS.BALANCE, String(startingBalance)),
-      AsyncStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(DEMO_TRANSACTIONS)),
-      AsyncStorage.setItem(STORAGE_KEYS.USD_BALANCE, "500"),
-      AsyncStorage.setItem(STORAGE_KEYS.USD_TRANSACTIONS, JSON.stringify(DEMO_USD_TRANSACTIONS)),
+      AsyncStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify([])),
+      AsyncStorage.setItem(STORAGE_KEYS.USD_BALANCE, "0"),
+      AsyncStorage.setItem(STORAGE_KEYS.USD_TRANSACTIONS, JSON.stringify([])),
       AsyncStorage.setItem(STORAGE_KEYS.HAS_ACCOUNT, "1"),
       AsyncStorage.setItem(STORAGE_KEYS.SESSION, "1"),
     ]);
