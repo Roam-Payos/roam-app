@@ -38,6 +38,7 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colors = useColors();
   const isIOS = Platform.OS === "ios";
+  const isAndroid = Platform.OS === "android";
   const isWeb = Platform.OS === "web";
 
   return (
@@ -49,10 +50,24 @@ function ClassicTabLayout() {
         tabBarStyle: {
           position: "absolute",
           backgroundColor: isIOS ? "transparent" : colors.card,
-          borderTopWidth: 1,
+          borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.border,
-          elevation: 0,
-          ...(isWeb ? { height: 84 } : {}),
+          elevation: isAndroid ? 8 : 0,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          height: isAndroid ? 64 : isWeb ? 84 : undefined,
+          paddingBottom: isAndroid ? 8 : undefined,
+          paddingTop: isAndroid ? 6 : undefined,
+        },
+        tabBarLabelStyle: {
+          fontFamily: "Inter_500Medium",
+          fontSize: 11,
+          letterSpacing: 0.2,
+        },
+        tabBarIconStyle: {
+          marginBottom: isAndroid ? 0 : undefined,
         },
         tabBarBackground: () =>
           isIOS ? (
