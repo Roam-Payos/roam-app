@@ -7,6 +7,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -283,10 +284,16 @@ export default function ReceiveScreen() {
             </Text>
             <Pressable
               style={({ pressed }) => [styles.shareBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
-              onPress={() => Alert.alert("Share", "QR sharing coming soon")}
+              onPress={async () => {
+                const acctNum = virtualAccount?.account_number ?? "";
+                const bank = virtualAccount?.bank_name ?? "Providus Bank";
+                const name = virtualAccount?.account_name ?? (user?.name ?? "");
+                const msg = `Pay me via bank transfer:\n\nAccount Name: ${name}\nAccount Number: ${acctNum}\nBank: ${bank}\n\nSent via Roam by PayOs`;
+                try { await Share.share({ message: msg }); } catch {}
+              }}
             >
               <Share2 size={16} color="#fff" strokeWidth={1.8} />
-              <Text style={styles.shareBtnText}>Share QR</Text>
+              <Text style={styles.shareBtnText}>Share Account</Text>
             </Pressable>
           </View>
         )}
@@ -302,7 +309,11 @@ export default function ReceiveScreen() {
             </View>
             <Pressable
               style={({ pressed }) => [styles.shareBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
-              onPress={() => Alert.alert("Share Link", "Payment link copied and ready to share")}
+              onPress={async () => {
+                const handle = (user?.name ?? "me").toLowerCase().replace(/\s+/g, ".");
+                const link = `https://roam.payosng.com/pay/${handle}`;
+                try { await Share.share({ message: `Send me money on Roam by PayOs: ${link}` }); } catch {}
+              }}
             >
               <Share2 size={16} color="#fff" strokeWidth={1.8} />
               <Text style={styles.shareBtnText}>Share Payment Link</Text>
