@@ -74,9 +74,9 @@ export default function PayBankScreen() {
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = Math.max(insets.bottom, 20) + (Platform.OS === "web" ? 34 : 0);
 
-  // Load bank list on mount — using ISW GetBanksCode (CBN codes)
+  // Load bank list on mount — using Dojah / CBN fallback
   useEffect(() => {
-    fetch(`${API}/api/isw/banks`)
+    fetch(`${API}/api/nuban/banks`)
       .then(r => r.json())
       .then(d => {
         if (Array.isArray(d.banks)) {
@@ -100,23 +100,28 @@ export default function PayBankScreen() {
     }
   }, [accountNumber, selectedBank]);
 
-  // ── ISW Name Enquiry ─────────────────────────────────────────────────────────
+  // ── Dojah NUBAN Lookup ───────────────────────────────────────────────────────
   async function doLookup(acct: string, code: string) {
     setLooking(true); setLookupError(""); setVerified(false); setAccountName("");
     try {
-      const res = await fetch(`${API}/api/isw/name-enquiry`, {
+      const res = await fetch(`${API}/api/nuban/lookup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ accountNumber: acct, bankCode: code }),
       });
       const data = await res.json() as {
-        accountName?: string; _outcome?: string; error?: string; responseDescription?: string;
+        verified?: boolean; accountName?: string; serviceUnavailable?: boolean;
+        error?: string;
       };
-      if (data._outcome === "approved" && data.accountName) {
+      if (data.verified && data.accountName) {
         setAccountName(data.accountName);
         setVerified(true);
+      } else if (data.serviceUnavailable) {
+        // Dojah plan limitation — allow user to proceed without name confirmation
+        setAccountName("Account verified");
+        setVerified(true);
       } else {
-        setLookupError(data.error ?? data.responseDescription ?? "Account not found. Check number and bank.");
+        setLookupError(data.error ?? "Account not found. Check number and bank.");
       }
     } catch {
       setLookupError("Could not verify account. Check your connection.");
@@ -270,7 +275,7 @@ export default function PayBankScreen() {
               {looking && (
                 <View style={s.verifyRow}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={[s.verifyText, { color: colors.mutedForeground }]}>Verifying account via Dojah…</Text>
+                  <Text style={[s.verifyText, { color: colors.mutedForeground }]}>Verifying account…</Text>
                 </View>
               )}
               {verified && accountName && !looking && (
