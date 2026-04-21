@@ -125,22 +125,7 @@ export default function KycScreen() {
       ? `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`
       : "http://localhost:8080/api";
 
-    const user: RoamUser = {
-      id: Date.now().toString(),
-      name: name ?? "User",
-      phone: phone ?? "",
-      email: email ?? "",
-      country,
-      kycTier: tier,
-      kycBlocked: ninPath ? !ninPhoneMatch : false,
-      ninVerified: ninPath,
-      biometricEnabled: false,
-      pinHash: pin ?? "0000",
-      joinedAt: new Date().toISOString(),
-    };
-    await register(user, pin ?? "0000", 120000);
-
-    // Persist to PostgreSQL — must succeed before proceeding
+    // Persist to PostgreSQL FIRST so we get the real server-generated user ID
     const regPayload = {
       phone: phone ?? "",
       email: email ?? "",
@@ -165,6 +150,37 @@ export default function KycScreen() {
       setStep("initial");
       return;
     }
+
+    // Use the server's real user ID so wallet queries match the database
+    let serverId = Date.now().toString();
+    try {
+      if (regRes.status === 201) {
+        const regData = await regRes.json() as { userId?: string };
+        if (regData.userId) serverId = regData.userId;
+      } else if (regRes.status === 409) {
+        // Already registered — fetch the existing user's ID
+        const lookupRes = await fetch(`${apiBase}/roam/lookup?phone=${encodeURIComponent(phone ?? "")}&email=${encodeURIComponent(email ?? "")}`);
+        if (lookupRes.ok) {
+          const lookupData = await lookupRes.json() as { userId?: string };
+          if (lookupData.userId) serverId = lookupData.userId;
+        }
+      }
+    } catch { /* keep local timestamp ID as fallback */ }
+
+    const user: RoamUser = {
+      id: serverId,
+      name: name ?? "User",
+      phone: phone ?? "",
+      email: email ?? "",
+      country,
+      kycTier: tier,
+      kycBlocked: ninPath ? !ninPhoneMatch : false,
+      ninVerified: ninPath,
+      biometricEnabled: false,
+      pinHash: pin ?? "0000",
+      joinedAt: new Date().toISOString(),
+    };
+    await register(user, pin ?? "0000", 120000);
 
     // Store KYC records — errors are non-fatal, local AsyncStorage still works
     try {
