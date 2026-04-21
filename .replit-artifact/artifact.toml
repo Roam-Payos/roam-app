@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/roam-app/"
+title = "Roam by PayOs"
+version = "1.0.0"
+id = "artifacts/roam-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/roam-app/" ]
+localPort = 21832
+
+[services.development]
+run = "pnpm --filter @workspace/roam-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/roam-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/roam-app", "run", "serve" ]
+
+[services.env]
+PORT = "21832"
+BASE_PATH = "/roam-app/"
