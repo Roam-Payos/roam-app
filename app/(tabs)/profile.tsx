@@ -17,7 +17,7 @@ import {
 } from "lucide-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Alert, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useRoam } from "@/context/RoamContext";
@@ -41,9 +41,37 @@ interface KycRecord {
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, logout, upgradeKyc, unblockKyc, enableBiometric, refreshUser } = useRoam();
+  const { user, logout, upgradeKyc, unblockKyc, enableBiometric, refreshUser, verifyPin, getStoredPin } = useRoam();
   const [biometricAvail, setBiometricAvail] = useState(false);
   const [kycRecords, setKycRecords] = useState<KycRecord[]>([]);
+
+  // ── Change PIN modal ──────────────────────────────────────────────────────
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [oldPin, setOldPin] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinSuccess, setPinSuccess] = useState(false);
+
+  async function handleChangePin() {
+    setPinError("");
+    if (oldPin.length < 4) { setPinError("Enter your current 4-digit PIN."); return; }
+    if (!verifyPin(oldPin)) { setPinError("Current PIN is incorrect."); return; }
+    if (newPin.length < 4) { setPinError("New PIN must be 4 digits."); return; }
+    if (newPin !== confirmPin) { setPinError("New PINs do not match."); return; }
+    if (newPin === oldPin) { setPinError("New PIN must be different from current PIN."); return; }
+    await AsyncStorage.setItem("roam_pin", newPin);
+    setPinSuccess(true);
+    setTimeout(() => {
+      setPinModalOpen(false);
+      setOldPin(""); setNewPin(""); setConfirmPin(""); setPinError(""); setPinSuccess(false);
+    }, 1500);
+  }
+
+  function openChangePinModal() {
+    setOldPin(""); setNewPin(""); setConfirmPin(""); setPinError(""); setPinSuccess(false);
+    setPinModalOpen(true);
+  }
 
   const fetchKycRecords = useCallback(async () => {
     if (!user?.phone) return;
@@ -260,7 +288,7 @@ export default function ProfileScreen() {
             Icon={Lock}
             label="Change PIN"
             colors={colors}
-            onPress={() => Alert.alert("Change PIN", "PIN change flow coming soon")}
+            onPress={openChangePinModal}
           />
           <MenuItem
             Icon={Shield}
@@ -287,8 +315,11 @@ export default function ProfileScreen() {
 
         <Text style={[styles.groupLabel, { color: colors.mutedForeground }]}>Support</Text>
         <View style={[styles.menuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <MenuItem Icon={HelpCircle} label="Help & FAQ" colors={colors} onPress={() => Alert.alert("Help", "Support coming soon")} />
-          <MenuItem Icon={Info} label="About Roam" colors={colors} onPress={() => Alert.alert("About", "Roam by PayOs — v1.0.0")} last />
+          <MenuItem Icon={HelpCircle} label="Help & Support" colors={colors} onPress={() => {
+            const url = "mailto:support@payos.africa?subject=Roam%20Support";
+            Linking.openURL(url).catch(() => Alert.alert("Contact Support", "Email us at support@payos.africa"));
+          }} />
+          <MenuItem Icon={Info} label="About Roam" colors={colors} onPress={() => Alert.alert("Roam by PayOs", "Version 1.0.0\n\nBuilt for seamless cross-border payments across Africa.\n\n© 2025 PayOs Africa Limited")} last />
         </View>
 
         <Pressable
@@ -302,9 +333,75 @@ export default function ProfileScreen() {
           <Text style={[styles.logoutText, { color: colors.destructive }]}>Sign Out</Text>
         </Pressable>
       </ScrollView>
+
+      {/* ── Change PIN Modal ── */}
+      <Modal visible={pinModalOpen} transparent animationType="slide" onRequestClose={() => setPinModalOpen(false)}>
+        <TouchableWithoutFeedback onPress={() => setPinModalOpen(false)}>
+          <View style={pStyles.overlay} />
+        </TouchableWithoutFeedback>
+        <View style={[pStyles.sheet, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[pStyles.handle, { backgroundColor: colors.border }]} />
+          <Text style={[pStyles.title, { color: colors.foreground }]}>Change PIN</Text>
+          {pinSuccess ? (
+            <View style={pStyles.successBox}>
+              <Text style={[pStyles.successText, { color: colors.success ?? "#16A34A" }]}>PIN changed successfully!</Text>
+            </View>
+          ) : (
+            <>
+              <Text style={[pStyles.fieldLabel, { color: colors.mutedForeground }]}>Current PIN</Text>
+              <TextInput
+                style={[pStyles.pinInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+                secureTextEntry keyboardType="numeric" maxLength={4}
+                placeholder="••••" placeholderTextColor={colors.mutedForeground}
+                value={oldPin} onChangeText={setOldPin}
+              />
+              <Text style={[pStyles.fieldLabel, { color: colors.mutedForeground }]}>New PIN</Text>
+              <TextInput
+                style={[pStyles.pinInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+                secureTextEntry keyboardType="numeric" maxLength={4}
+                placeholder="••••" placeholderTextColor={colors.mutedForeground}
+                value={newPin} onChangeText={setNewPin}
+              />
+              <Text style={[pStyles.fieldLabel, { color: colors.mutedForeground }]}>Confirm New PIN</Text>
+              <TextInput
+                style={[pStyles.pinInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+                secureTextEntry keyboardType="numeric" maxLength={4}
+                placeholder="••••" placeholderTextColor={colors.mutedForeground}
+                value={confirmPin} onChangeText={setConfirmPin}
+              />
+              {!!pinError && (
+                <Text style={[pStyles.errorText, { color: colors.destructive }]}>{pinError}</Text>
+              )}
+              <Pressable
+                onPress={handleChangePin}
+                style={({ pressed }) => [pStyles.confirmBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
+              >
+                <Text style={pStyles.confirmBtnText}>Save New PIN</Text>
+              </Pressable>
+              <Pressable onPress={() => setPinModalOpen(false)} style={{ alignItems: "center", marginTop: 12 }}>
+                <Text style={{ color: colors.mutedForeground, fontSize: 13, fontFamily: "Inter_400Regular" }}>Cancel</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
+
+const pStyles = StyleSheet.create({
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
+  sheet: { position: "absolute", bottom: 0, left: 0, right: 0, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderWidth: StyleSheet.hairlineWidth, padding: 24, paddingBottom: 40 },
+  handle: { width: 40, height: 4, borderRadius: 2, alignSelf: "center", marginBottom: 20 },
+  title: { fontSize: 18, fontFamily: "Inter_600SemiBold", marginBottom: 20 },
+  fieldLabel: { fontSize: 12, fontFamily: "Inter_500Medium", marginBottom: 6 },
+  pinInput: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 20, letterSpacing: 8, fontFamily: "Inter_600SemiBold", marginBottom: 16, textAlign: "center" },
+  errorText: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 12, textAlign: "center" },
+  confirmBtn: { borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 4 },
+  confirmBtnText: { color: "#fff", fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  successBox: { alignItems: "center", paddingVertical: 30 },
+  successText: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
+});
 
 function InfoRow({ Icon, label, value, colors, last, valueColor }: {
   Icon: LucideIcon; label: string; value: string;
