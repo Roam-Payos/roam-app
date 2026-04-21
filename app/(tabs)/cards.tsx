@@ -638,7 +638,7 @@ function CardSettingsModal({ visible, card, onClose, colors }: {
         onClose();
         setTimeout(() => Alert.alert(
           "Report Lost Card",
-          "Your card will be immediately frozen and a new card issued within 24 hours.\n\nContact: support@payos.africa",
+          "Your card will be immediately frozen and a new card issued within 24 hours.\n\nContact: support@payosng.com",
           [{ text: "Cancel" }, { text: "Freeze Card Now", style: "destructive" }]
         ), 300);
       },
