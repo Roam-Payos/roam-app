@@ -1,0 +1,86 @@
+{
+  "expo": {
+    "name": "Roam by PayOs",
+    "slug": "roam-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "roam-app",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1C3D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "africa.payos.roam",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Roam uses your location to find nearby deals and services.",
+        "NSFaceIDUsageDescription": "Roam uses Face ID to secure your wallet and verify your identity.",
+        "NSCameraUsageDescription": "Roam uses the camera for KYC identity verification."
+      }
+    },
+    "android": {
+      "package": "africa.payos.roam",
+      "versionCode": 1,
+      "backgroundColor": "#0B1C3D",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0B1C3D"
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.VIBRATE",
+        "android.permission.INTERNET"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "roam.payos.africa",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Roam uses Face ID to secure your wallet."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id-here"
+      }
+    }
+  }
+}
