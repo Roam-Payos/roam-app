@@ -54,7 +54,7 @@ type Step = "search" | "results" | "confirm";
 export default function BusScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user } = useRoam() as any;
+  const { user, getAuthHeaders } = useRoam() as any;
   const { cityName } = useLocalSearchParams<{ cityName?: string }>();
 
   const [step, setStep] = useState<Step>("search");
@@ -107,7 +107,7 @@ export default function BusScreen() {
     try {
       const r = await fetch(`${API}/arrive/tickets/bus/book`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ userId: user.id, routeId: selected.id, travelDate: date, passengers }),
       });
       const d = await r.json();
@@ -373,7 +373,7 @@ export default function BusScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth },
-  backBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   headerTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
   headerSub: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
   content: { padding: 20, gap: 14 },

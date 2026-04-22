@@ -168,7 +168,7 @@ export default function ArriveHubScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 16 },
   headerTextBlock: {},
   flagRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   flag: { fontSize: 22 },

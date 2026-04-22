@@ -3,11 +3,16 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useRoam } from "@/context/RoamContext";
 
+const SPLASH_MIN_MS = 2400;
+
 export default function SplashScreen() {
   const { isAuthenticated, isLoading } = useRoam();
   const scale = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const mountedAt = useRef(Date.now());
+  const navigated = useRef(false);
 
+  // ── Run animation exactly once, immediately on mount ──────────────────────
   useEffect(() => {
     Animated.parallel([
       Animated.timing(scale, {
@@ -22,17 +27,26 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+  }, []); // empty deps — never re-runs
 
-    if (!isLoading) {
-      const timer = setTimeout(() => {
-        if (isAuthenticated) {
-          router.replace("/(tabs)/");
-        } else {
-          router.replace("/(onboarding)/welcome");
-        }
-      }, 2200);
-      return () => clearTimeout(timer);
-    }
+  // ── Navigate only after loading is done AND minimum time has elapsed ───────
+  useEffect(() => {
+    if (isLoading || navigated.current) return;
+
+    const elapsed = Date.now() - mountedAt.current;
+    const delay = Math.max(0, SPLASH_MIN_MS - elapsed);
+
+    const timer = setTimeout(() => {
+      if (navigated.current) return;
+      navigated.current = true;
+      if (isAuthenticated) {
+        router.replace("/(tabs)/");
+      } else {
+        router.replace("/(onboarding)/welcome");
+      }
+    }, delay);
+
+    return () => clearTimeout(timer);
   }, [isLoading, isAuthenticated]);
 
   return (

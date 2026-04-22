@@ -34,7 +34,7 @@ export default function ArriveRidesScreen() {
   const { cityId, cityName, flag, airport, symbol } = useLocalSearchParams<{
     cityId: string; cityName: string; flag: string; airport: string; symbol: string;
   }>();
-  const { user, syncBalance } = useRoam();
+  const { user, syncBalance, getAuthHeaders } = useRoam();
   const [rides, setRides] = useState<RideOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<RideOption | null>(null);
@@ -71,7 +71,7 @@ export default function ArriveRidesScreen() {
             try {
               const r = await fetch(`${API}/arrive/rides/book`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                   userId: user.id,
                   rideOptionId: selected.id,
@@ -190,7 +190,7 @@ export default function ArriveRidesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
   title: { fontSize: 22, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2, marginBottom: 0 },
   routeCard: { marginHorizontal: 20, borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 24 },

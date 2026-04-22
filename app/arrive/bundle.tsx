@@ -27,7 +27,7 @@ export default function ArriveBundleScreen() {
   const { cityId, cityName, flag, airport, symbol } = useLocalSearchParams<{
     cityId: string; cityName: string; flag: string; airport: string; symbol: string;
   }>();
-  const { user, syncBalance } = useRoam();
+  const { user, syncBalance, getAuthHeaders } = useRoam();
 
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [rides, setRides] = useState<Ride[]>([]);
@@ -88,7 +88,7 @@ export default function ArriveBundleScreen() {
             try {
               const r = await fetch(`${API}/arrive/bundle/book`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                   userId: user.id,
                   hotelId: selectedHotel.id,
@@ -268,7 +268,7 @@ export default function ArriveBundleScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
   headerText: { flexDirection: "row", alignItems: "center", gap: 12 },
   title: { fontSize: 22, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },

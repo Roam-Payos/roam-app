@@ -163,6 +163,8 @@ interface RoamContextType {
   maxSingleDeposit: number;
   maxBalance: number;
   // ── Credit alerts ────────────────────────────────────────────────────────
+  sessionToken: string | null;
+  getAuthHeaders: () => Record<string, string>;
   creditAlert: CreditAlert | null;
   clearCreditAlert: () => void;
   syncBalance: () => Promise<void>;
@@ -207,6 +209,7 @@ const STORAGE_KEYS = {
   USD_TRANSACTIONS: "roam_usd_transactions",
   HAS_ACCOUNT: "roam_has_account",
   SESSION: "roam_session",
+  SESSION_TOKEN: "roam_session_token",
   DEVICE_ID: "roam_device_id",
 };
 
@@ -383,6 +386,7 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [isNewDevice, setIsNewDevice] = useState(false);
   const [creditAlert, setCreditAlert] = useState<CreditAlert | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const lastSyncedBalance = useRef<number | null>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userRef = useRef<RoamUser | null>(null);
@@ -535,7 +539,7 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
       const [
         storedUser, storedPin, storedBalance, storedTx,
         storedUsdBalance, storedUsdTx,
-        storedHasAccount, storedSession,
+        storedHasAccount, storedSession, storedToken,
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.USER),
         AsyncStorage.getItem(STORAGE_KEYS.PIN),
@@ -545,7 +549,9 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
         AsyncStorage.getItem(STORAGE_KEYS.USD_TRANSACTIONS),
         AsyncStorage.getItem(STORAGE_KEYS.HAS_ACCOUNT),
         AsyncStorage.getItem(STORAGE_KEYS.SESSION),
+        AsyncStorage.getItem(STORAGE_KEYS.SESSION_TOKEN),
       ]);
+      if (storedToken) setSessionToken(storedToken);
       if (storedHasAccount === "1") setHasExistingAccount(true);
       const isActiveSession = storedSession === "1";
       const isLegacySession = !storedSession && storedUser && storedPin;
@@ -618,6 +624,7 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
 
       const data = await res.json() as {
         success: boolean;
+        token?: string;
         user: {
           id: string; phone: string; email: string; name: string;
           countryCode: string; kycTier: number; kycBlocked: boolean;
@@ -625,6 +632,10 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
         };
       };
       if (!data.success) return false;
+      if (data.token) {
+        setSessionToken(data.token);
+        AsyncStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, data.token).catch(() => {});
+      }
 
       const country = COUNTRIES.find((c) => c.code === data.user.countryCode) ?? COUNTRIES[0];
       const restoredUser: RoamUser = {
@@ -695,14 +706,26 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    const token = sessionToken;
     setUser(null);
     setPin("");
     setBalance(0);
     setUsdBalance(0);
     setTransactions([]);
     setUsdTransactions([]);
-    await AsyncStorage.removeItem(STORAGE_KEYS.SESSION);
-  }, []);
+    setSessionToken(null);
+    await Promise.all([
+      AsyncStorage.removeItem(STORAGE_KEYS.SESSION),
+      AsyncStorage.removeItem(STORAGE_KEYS.SESSION_TOKEN),
+    ]);
+    if (token) {
+      const apiBase = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
+      fetch(`${apiBase}/roam/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Roam-Token": token },
+      }).catch(() => {});
+    }
+  }, [sessionToken]);
 
   const verifyPin = useCallback((entered: string): boolean => {
     return entered === pin;
@@ -945,6 +968,12 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const getAuthHeaders = useCallback((): Record<string, string> => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (sessionToken) headers["X-Roam-Token"] = sessionToken;
+    return headers;
+  }, [sessionToken]);
+
   const tierVal = user?.kycTier ?? 1;
   const tier: 1 | 2 | 3 = tierVal >= 3 ? 3 : tierVal >= 2 ? 2 : 1;
   const tierLimits = tier === 3 ? CBN_LIMITS.TIER3 : tier === 2 ? CBN_LIMITS.TIER2 : CBN_LIMITS.TIER1;
@@ -966,6 +995,8 @@ export function RoamProvider({ children }: { children: React.ReactNode }) {
         dailyLimit,
         maxSingleDeposit: tierLimits.maxSingleDeposit,
         maxBalance: tierLimits.maxBalance,
+        sessionToken,
+        getAuthHeaders,
         creditAlert,
         clearCreditAlert,
         syncBalance,

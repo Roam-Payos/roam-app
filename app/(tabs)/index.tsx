@@ -17,8 +17,10 @@ import { TransactionReceipt } from "@/components/TransactionReceipt";
 import DealCard from "@/components/DealCard";
 import SponsoredAds from "@/components/SponsoredAds";
 import CreditAlertBanner from "@/components/CreditAlertBanner";
+import AssistantBanner from "@/components/AssistantBanner";
 import { useRoam, convertAmount, Transaction } from "@/context/RoamContext";
 import { useColors } from "@/hooks/useColors";
+import { useAssistant } from "@/hooks/useAssistant";
 
 const API = process.env.EXPO_PUBLIC_API_URL ?? `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 
@@ -53,7 +55,9 @@ export default function HomeScreen() {
     fxRatesUpdatedAt, isAuthenticated,
     creditAlert, clearCreditAlert, syncBalance,
   } = useRoam();
+  const { notifications, unreadCount, publishEvent, markRead, dismiss } = useAssistant();
 
+  const topUnread = notifications.find(n => n.status === "unread") ?? null;
 
   const [refreshing, setRefreshing]         = useState(false);
   const [convertOpen, setConvertOpen]       = useState(false);
@@ -105,6 +109,14 @@ export default function HomeScreen() {
       if (res.ok) { const d = await res.json(); setTrendingDeals(d.deals ?? []); }
     } catch {}
   }, [country]);
+
+  // Publish APP_OPENED to the Smart Assistant rule engine
+  useEffect(() => {
+    if (user?.id) {
+      publishEvent("APP_OPENED", { country: country });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     loadStats();
@@ -191,6 +203,11 @@ export default function HomeScreen() {
                   onPress={() => router.push("/(tabs)/history")}
                 >
                   <Bell size={18} color={colors.foreground} strokeWidth={1.8} />
+                  {unreadCount > 0 && (
+                    <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+                      <Text style={styles.badgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+                    </View>
+                  )}
                 </Pressable>
                 <Pressable onPress={() => router.push("/(tabs)/profile")}>
                   <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
@@ -212,6 +229,15 @@ export default function HomeScreen() {
                   <Text style={[styles.blockedSub, { color: colors.mutedForeground }]}>Tap to complete KYC and unlock your account.</Text>
                 </View>
               </Pressable>
+            )}
+
+            {/* ── Smart Assistant Banner ── */}
+            {topUnread && !creditAlert && (
+              <AssistantBanner
+                notification={topUnread}
+                onDismiss={dismiss}
+                onPress={n => markRead(n.id)}
+              />
             )}
 
             {/* ── Loyalty + Check-in row ── */}
@@ -492,7 +518,9 @@ const styles = StyleSheet.create({
   greeting:   { fontSize: 13, fontFamily: "Inter_400Regular" },
   name:       { fontSize: 22, fontFamily: "Inter_700Bold" },
   topActions: { flexDirection: "row", alignItems: "center", gap: 10 },
-  notifBtn:   { width: 38, height: 38, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  notifBtn:   { width: 38, height: 38, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center", position: "relative" },
+  badge:      { position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, alignItems: "center", justifyContent: "center", paddingHorizontal: 3 },
+  badgeText:  { color: "#fff", fontSize: 9, fontFamily: "Inter_700Bold", lineHeight: 12 },
   avatar:     { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#fff", fontSize: 16, fontFamily: "Inter_700Bold" },
 

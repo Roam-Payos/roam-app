@@ -44,7 +44,7 @@ export default function ArriveHotelsScreen() {
   const { cityId, cityName, flag, symbol } = useLocalSearchParams<{
     cityId: string; cityName: string; flag: string; symbol: string;
   }>();
-  const { user, syncBalance } = useRoam();
+  const { user, syncBalance, getAuthHeaders } = useRoam();
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export default function ArriveHotelsScreen() {
             try {
               const r = await fetch(`${API}/arrive/hotels/book`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                   userId: user.id,
                   hotelId: hotel.id,
@@ -181,7 +181,7 @@ export default function ArriveHotelsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
   title: { fontSize: 22, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
   card: { borderRadius: 18, borderWidth: 1, padding: 16 },

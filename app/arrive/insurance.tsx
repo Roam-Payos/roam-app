@@ -36,7 +36,7 @@ export default function ArriveInsuranceScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { cityName, flag } = useLocalSearchParams<{ cityName: string; flag: string }>();
-  const { user, syncBalance } = useRoam();
+  const { user, syncBalance, getAuthHeaders } = useRoam();
   const [plans, setPlans] = useState<InsurancePlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -69,7 +69,7 @@ export default function ArriveInsuranceScreen() {
             try {
               const r = await fetch(`${API}/arrive/insurance/purchase`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ userId: user.id, planId: plan.id, cityName }),
               });
               const data = await r.json();
@@ -169,7 +169,7 @@ export default function ArriveInsuranceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
   title: { fontSize: 22, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
   planCard: { borderRadius: 18, borderWidth: 1, overflow: "hidden" },
