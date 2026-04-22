@@ -1,4 +1,4 @@
-import { ArrowLeft, BaggageClaim, Hotel, Package, Shield, Smartphone } from "lucide-react-native";
+import { ArrowLeft, BaggageClaim, Bus, Hotel, Package, Plane, Shield, Smartphone } from "lucide-react-native";
 import React from "react";
 import {
   Platform,
@@ -14,10 +14,26 @@ import { useColors } from "@/hooks/useColors";
 
 const SERVICES = [
   {
+    id: "flights",
+    label: "Flights",
+    icon: Plane,
+    color: "#6366F1",
+    desc: "Inter-Africa routes",
+    route: "/arrive/flights",
+  },
+  {
+    id: "bus",
+    label: "Bus / Transport",
+    icon: Bus,
+    color: "#8B5CF6",
+    desc: "from ₦2,800",
+    route: "/arrive/bus",
+  },
+  {
     id: "hotels",
     label: "Hotels",
     icon: Hotel,
-    color: "#6366F1",
+    color: "#F97316",
     desc: "from ₦32,000/night",
     route: "/arrive/hotels",
   },
@@ -25,7 +41,7 @@ const SERVICES = [
     id: "rides",
     label: "Airport Ride",
     icon: BaggageClaim,
-    color: "#F97316",
+    color: "#0EA5E9",
     desc: "from ₦25,000",
     route: "/arrive/rides",
   },
@@ -41,7 +57,7 @@ const SERVICES = [
     id: "sim",
     label: "Data & SIM",
     icon: Smartphone,
-    color: "#0EA5E9",
+    color: "#EC4899",
     desc: "from ₦2,000",
     route: "/airtime",
     external: true,
