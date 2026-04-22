@@ -32,6 +32,7 @@ function RootLayoutNav() {
       <Stack.Screen name="receive/index" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="airtime/index" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="bills/index" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen name="arrive" options={{ headerShown: false }} />
     </Stack>
   );
 }
