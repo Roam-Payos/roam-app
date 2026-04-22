@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import {
   AlertTriangle, ArrowLeftRight, Bell, CreditCard, Download, Flame,
-  Gift, Inbox, Phone, PiggyBank, QrCode, Send, Share2, ShoppingBag, Star, Zap,
+  Gift, Inbox, Phone, PiggyBank, Plane, QrCode, Send, Share2, ShoppingBag, Star, Zap,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -25,6 +25,7 @@ const API = process.env.EXPO_PUBLIC_API_URL ?? `https://${process.env.EXPO_PUBLI
 const QUICK_ACTIONS: ActionItem[] = [
   { id: "send",      label: "Send",      icon: Send,        route: "/send",          color: "#F97316" },
   { id: "pay",       label: "Pay",       icon: ShoppingBag, route: "/pay",           color: "#6366F1" },
+  { id: "arrive",    label: "Arrive",    icon: Plane,       route: "/arrive",        color: "#10B981" },
   { id: "receive",   label: "Receive",   icon: Download,    route: "/receive",       color: "#10B981" },
   { id: "save",      label: "Save",      icon: PiggyBank,   route: "/(tabs)/save",   color: "#8B5CF6" },
   { id: "paycode",   label: "PayCode",   icon: QrCode,      route: "/paycode",       color: "#0EA5E9" },
